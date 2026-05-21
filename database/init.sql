@@ -113,3 +113,24 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER products_updated_at
   BEFORE UPDATE ON products
   FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+
+-- ============================================
+-- 存储桶 RLS 策略（图片上传权限）
+-- ============================================
+
+-- 允许登录用户上传图片
+CREATE POLICY "Users can upload product images"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'product-images');
+
+-- 允许公开读取图片
+CREATE POLICY "Anyone can view product images"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'product-images');
+
+-- 允许用户删除自己上传的图片
+CREATE POLICY "Users can delete own images"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (bucket_id = 'product-images' AND owner = auth.uid());
