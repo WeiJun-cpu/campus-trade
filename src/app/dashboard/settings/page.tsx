@@ -5,16 +5,14 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import type { Profile } from "@/lib/types";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [qq, setQq] = useState("");
   const [wechat, setWechat] = useState("");
@@ -64,79 +62,118 @@ export default function SettingsPage() {
 
   if (!profile) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-bold">编辑资料</h1>
-        <p className="text-muted-foreground">加载中...</p>
+      <div className="space-y-6 animate-fade-in">
+        <h1
+          className="text-xl font-bold text-espresso"
+          style={{ fontFamily: "var(--font-display), serif" }}
+        >
+          编辑资料
+        </h1>
+        <div className="h-40 rounded-2xl bg-muted animate-pulse" />
       </div>
     );
   }
 
+  const initials = profile.username?.slice(0, 2).toUpperCase() || profile.id?.slice(0, 2).toUpperCase();
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">编辑资料</h1>
+    <div className="space-y-6 animate-fade-in-up">
+      <h1
+        className="text-xl font-bold text-espresso"
+        style={{ fontFamily: "var(--font-display), serif" }}
+      >
+        编辑资料
+      </h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">基本信息</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="text-xl">
-                {profile.username?.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-sm text-muted-foreground">{profile.id}</p>
-              <p className="text-xs text-muted-foreground">
-                注册时间：{new Date(profile.created_at).toLocaleDateString("zh-CN")}
-              </p>
-            </div>
+      {/* Avatar & basic info */}
+      <div className="bg-surface rounded-2xl border border-border/60 p-6 space-y-5 shadow-sm">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16 ring-2 ring-primary/20">
+            <AvatarImage src={profile.avatar_url || undefined} />
+            <AvatarFallback
+              className="text-xl font-bold bg-primary text-primary-fg"
+              style={{ fontFamily: "var(--font-display), serif" }}
+            >
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-xs text-muted-fg font-mono">ID: {profile.id.slice(0, 8)}...</p>
+            <p className="text-xs text-muted-fg">
+              注册于 {new Date(profile.created_at).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
+            </p>
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="username">用户名</Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+        <Separator className="bg-border/60" />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">联系方式</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            填写联系方式后，买家可以在商品详情页看到，方便与你沟通。
+        <div className="space-y-2">
+          <Label htmlFor="username" className="text-sm font-medium text-espresso">
+            用户名
+          </Label>
+          <Input
+            id="username"
+            placeholder="设置一个昵称"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="rounded-xl border-border/60 h-11 bg-cream/50 focus:bg-surface transition-colors"
+          />
+        </div>
+      </div>
+
+      {/* Contact info */}
+      <div className="bg-surface rounded-2xl border border-border/60 p-6 space-y-5 shadow-sm">
+        <div>
+          <h2 className="font-semibold text-espresso">联系方式</h2>
+          <p className="text-sm text-muted-fg mt-1">
+            填写后买家可以在商品详情页看到，方便快速联系
           </p>
+        </div>
+
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="qq">QQ号</Label>
+            <Label htmlFor="qq" className="text-sm font-medium text-espresso">
+              QQ号
+            </Label>
             <Input
               id="qq"
               placeholder="填写你的QQ号"
               value={qq}
               onChange={(e) => setQq(e.target.value)}
+              className="rounded-xl border-border/60 h-11 bg-cream/50 focus:bg-surface transition-colors"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="wechat">微信号</Label>
+            <Label htmlFor="wechat" className="text-sm font-medium text-espresso">
+              微信号
+            </Label>
             <Input
               id="wechat"
               placeholder="填写你的微信号"
               value={wechat}
               onChange={(e) => setWechat(e.target.value)}
+              className="rounded-xl border-border/60 h-11 bg-cream/50 focus:bg-surface transition-colors"
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Button onClick={handleSave} disabled={loading}>
-        {loading ? "保存中..." : "保存修改"}
+      <Button
+        onClick={handleSave}
+        disabled={loading}
+        className="rounded-xl bg-primary hover:bg-primary/90 text-primary-fg shadow-warm hover:shadow-lg transition-all duration-200 font-semibold px-8"
+      >
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            保存中...
+          </span>
+        ) : (
+          "保存修改"
+        )}
       </Button>
     </div>
   );

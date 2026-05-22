@@ -13,6 +13,7 @@ interface Props {
 
 export function FavoriteButton({ productId, initialFavorited }: Props) {
   const [favorited, setFavorited] = useState(initialFavorited);
+  const [animating, setAnimating] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -23,6 +24,7 @@ export function FavoriteButton({ productId, initialFavorited }: Props) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push("/auth/login");
+      setLoading(false);
       return;
     }
 
@@ -42,7 +44,9 @@ export function FavoriteButton({ productId, initialFavorited }: Props) {
         toast.error(error.message);
       } else {
         setFavorited(true);
-        toast.success("已收藏");
+        setAnimating(true);
+        setTimeout(() => setAnimating(false), 400);
+        toast.success("已收藏 ❤");
       }
     }
 
@@ -52,12 +56,17 @@ export function FavoriteButton({ productId, initialFavorited }: Props) {
 
   return (
     <Button
-      variant={favorited ? "default" : "outline"}
-      className="w-full"
       onClick={toggleFavorite}
       disabled={loading}
+      className={`w-full rounded-full font-medium transition-all duration-200 ${
+        favorited
+          ? "bg-primary text-primary-fg shadow-warm"
+          : "bg-surface border-2 border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/40"
+      }`}
     >
-      {favorited ? "❤ 已收藏" : "♡ 收藏"}
+      <span className={animating ? "animate-heart-beat" : ""}>
+        {favorited ? "❤ 已收藏" : "♡ 收藏"}
+      </span>
     </Button>
   );
 }

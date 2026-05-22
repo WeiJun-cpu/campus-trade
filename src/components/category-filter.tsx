@@ -1,13 +1,21 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import type { Category } from "@/lib/types";
 
 interface Props {
   categories: Category[];
   selected: string | null;
 }
+
+const CAT_ICONS: Record<string, string> = {
+  digital: "💻",
+  books: "📚",
+  daily: "🏠",
+  fashion: "👗",
+  sports: "⚽",
+  other: "📦",
+};
 
 export function CategoryFilter({ categories, selected }: Props) {
   const router = useRouter();
@@ -26,22 +34,28 @@ export function CategoryFilter({ categories, selected }: Props) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Button
-        variant={selected === null ? "default" : "outline"}
-        size="sm"
+      <button
         onClick={() => handleSelect(null)}
+        className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+          selected === null
+            ? "bg-primary text-primary-fg shadow-md shadow-primary/20"
+            : "bg-surface border border-border hover:border-primary/30 hover:bg-secondary text-muted-fg hover:text-espresso"
+        }`}
       >
-        全部
-      </Button>
+        🔥 全部
+      </button>
       {categories.map((cat) => (
-        <Button
+        <button
           key={cat.id}
-          variant={selected === cat.slug ? "default" : "outline"}
-          size="sm"
           onClick={() => handleSelect(cat.slug)}
+          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+            selected === cat.slug
+              ? "bg-primary text-primary-fg shadow-md shadow-primary/20"
+              : "bg-surface border border-border hover:border-primary/30 hover:bg-secondary text-muted-fg hover:text-espresso"
+          }`}
         >
-          {cat.name}
-        </Button>
+          {CAT_ICONS[cat.slug] || "📌"} {cat.name}
+        </button>
       ))}
     </div>
   );

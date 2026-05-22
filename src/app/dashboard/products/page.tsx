@@ -35,15 +35,15 @@ export default function MyProductsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-7 w-24" />
+      <div className="space-y-5 animate-fade-in">
+        <Skeleton className="h-8 w-28 rounded-xl" />
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex gap-3 rounded-lg border p-3">
-              <Skeleton className="h-20 w-20 rounded-md" />
+            <div key={i} className="flex gap-4 rounded-2xl border border-border/60 bg-surface p-4">
+              <Skeleton className="h-20 w-20 rounded-xl shrink-0" />
               <div className="flex-1 space-y-2">
-                <Skeleton className="h-5 w-1/3" />
-                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-5 w-1/3 rounded-lg" />
+                <Skeleton className="h-4 w-1/4 rounded-lg" />
               </div>
             </div>
           ))}
@@ -54,11 +54,22 @@ export default function MyProductsPage() {
 
   if (!products || products.length === 0) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-bold">我的商品</h1>
-        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <p className="mb-4">你还没有发布任何商品</p>
-          <Button asChild>
+      <div className="space-y-5 animate-fade-in">
+        <h1
+          className="text-xl font-bold text-espresso"
+          style={{ fontFamily: "var(--font-display), serif" }}
+        >
+          我的商品
+        </h1>
+        <div className="flex flex-col items-center justify-center py-20 rounded-2xl border border-dashed border-border/60 bg-surface/50">
+          <div className="mb-5 rounded-full bg-muted p-5">
+            <svg className="h-9 w-9 text-muted-fg/35" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+          </div>
+          <p className="text-muted-fg mb-1">你还没有发布任何商品</p>
+          <p className="text-xs text-muted-fg/60 mb-5">快把闲置好物分享出来吧</p>
+          <Button asChild className="rounded-xl bg-primary hover:bg-primary/90 shadow-warm">
             <Link href="/publish">发布第一件商品</Link>
           </Button>
         </div>
@@ -67,58 +78,83 @@ export default function MyProductsPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 animate-fade-in-up">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">我的商品</h1>
-        <Button size="sm" asChild>
-          <Link href="/publish">发布商品</Link>
+        <h1
+          className="text-xl font-bold text-espresso"
+          style={{ fontFamily: "var(--font-display), serif" }}
+        >
+          我的商品
+        </h1>
+        <Button
+          size="sm"
+          asChild
+          className="rounded-xl bg-primary hover:bg-primary/90 text-primary-fg shadow-warm"
+        >
+          <Link href="/publish">
+            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            发布商品
+          </Link>
         </Button>
       </div>
 
       <div className="space-y-3">
-        {products.map((product) => (
-          <div key={product.id} className="flex gap-3 rounded-lg border p-3">
+        {products.map((product, i) => (
+          <div
+            key={product.id}
+            className="flex gap-4 rounded-2xl border border-border/60 bg-surface p-4 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-200"
+            style={{ animationDelay: `${i * 0.05}s` }}
+          >
             <Link href={`/product/${product.id}`} className="shrink-0">
               {product.images?.[0] ? (
                 <img
                   src={product.images[0]}
                   alt={product.title}
-                  className="h-20 w-20 rounded-md object-cover"
+                  className="h-20 w-20 rounded-xl object-cover"
                 />
               ) : (
-                <div className="h-20 w-20 rounded-md bg-muted flex items-center justify-center">
-                  <svg className="h-8 w-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="h-20 w-20 rounded-xl bg-muted flex items-center justify-center">
+                  <svg className="h-8 w-8 text-muted-fg/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
               )}
             </Link>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <Link
-                    href={`/product/${product.id}`}
-                    className="font-medium hover:text-primary line-clamp-1"
+
+            <div className="flex-1 min-w-0 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <Link
+                  href={`/product/${product.id}`}
+                  className="font-semibold text-espresso hover:text-primary line-clamp-1 transition-colors"
+                >
+                  {product.title}
+                </Link>
+                <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                  <span
+                    className="text-lg font-bold text-primary"
+                    style={{ fontFamily: "var(--font-display), serif" }}
                   >
-                    {product.title}
-                  </Link>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="text-lg font-bold text-red-500">
-                      {formatPrice(product.price)}
-                    </span>
-                    <Badge variant={product.status === "active" ? "default" : "secondary"}>
-                      {STATUS_LABELS[product.status]}
+                    {formatPrice(product.price)}
+                  </span>
+                  <Badge
+                    variant={product.status === "active" ? "default" : "secondary"}
+                    className="rounded-full text-xs"
+                  >
+                    {STATUS_LABELS[product.status]}
+                  </Badge>
+                  {product.category && (
+                    <Badge variant="outline" className="rounded-full text-xs">
+                      {product.category.name}
                     </Badge>
-                    {product.category && (
-                      <Badge variant="outline">{product.category.name}</Badge>
-                    )}
-                  </div>
+                  )}
                 </div>
-                <ManageProductButtons productId={product.id} status={product.status} />
+                <p className="mt-1.5 text-xs text-muted-fg/70">
+                  {formatDate(product.created_at)} 发布
+                </p>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {formatDate(product.created_at)} 发布
-              </p>
+              <ManageProductButtons productId={product.id} status={product.status} />
             </div>
           </div>
         ))}

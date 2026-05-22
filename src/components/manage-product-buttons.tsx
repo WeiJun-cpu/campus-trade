@@ -53,6 +53,7 @@ export function ManageProductButtons({ productId, status }: Props) {
             size="sm"
             variant="outline"
             onClick={() => updateStatus("sold")}
+            className="rounded-lg border-border/60 text-muted-fg hover:text-espresso hover:border-primary/30"
           >
             标记已售
           </Button>
@@ -60,6 +61,7 @@ export function ManageProductButtons({ productId, status }: Props) {
             size="sm"
             variant="outline"
             onClick={() => updateStatus("reserved")}
+            className="rounded-lg border-border/60 text-muted-fg hover:text-espresso hover:border-primary/30"
           >
             标记预订
           </Button>
@@ -70,6 +72,7 @@ export function ManageProductButtons({ productId, status }: Props) {
           size="sm"
           variant="outline"
           onClick={() => updateStatus("active")}
+          className="rounded-lg border-border/60 text-muted-fg hover:text-espresso hover:border-primary/30"
         >
           重新上架
         </Button>
@@ -77,7 +80,7 @@ export function ManageProductButtons({ productId, status }: Props) {
       <Button
         size="sm"
         variant="outline"
-        className="text-red-500 hover:text-red-600"
+        className="rounded-lg border-border/60 text-danger hover:text-danger/80 hover:border-danger/40"
         onClick={deleteProduct}
       >
         删除

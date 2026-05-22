@@ -16,7 +16,7 @@ export function LogoutButton() {
   };
 
   return (
-    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500">
+    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-danger">
       退出登录
     </DropdownMenuItem>
   );
