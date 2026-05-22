@@ -1,25 +1,56 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ManageProductButtons } from "@/components/manage-product-buttons";
 import { formatPrice, formatDate, STATUS_LABELS } from "@/lib/utils";
+import type { User } from "@supabase/supabase-js";
 
-export const dynamic = "force-dynamic";
+export default function MyProductsPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
 
-export default async function MyProductsPage() {
-  const supabase = await createClient();
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      if (data.user) {
+        supabase
+          .from("products")
+          .select("*, category:categories(*)")
+          .eq("seller_id", data.user.id)
+          .order("created_at", { ascending: false })
+          .then(({ data }) => {
+            setProducts(data || []);
+            setLoading(false);
+          });
+      }
+    });
+  }, []);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: products } = await supabase
-    .from("products")
-    .select("*, category:categories(*)")
-    .eq("seller_id", user!.id)
-    .order("created_at", { ascending: false });
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-7 w-24" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-3 rounded-lg border p-3">
+              <Skeleton className="h-20 w-20 rounded-md" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-1/3" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!products || products.length === 0) {
     return (
@@ -46,10 +77,7 @@ export default async function MyProductsPage() {
 
       <div className="space-y-3">
         {products.map((product) => (
-          <div
-            key={product.id}
-            className="flex gap-3 rounded-lg border p-3"
-          >
+          <div key={product.id} className="flex gap-3 rounded-lg border p-3">
             <Link href={`/product/${product.id}`} className="shrink-0">
               {product.images?.[0] ? (
                 <img
@@ -82,7 +110,7 @@ export default async function MyProductsPage() {
                       {STATUS_LABELS[product.status]}
                     </Badge>
                     {product.category && (
-                      <Badge variant="outline">{(product as any).category.name}</Badge>
+                      <Badge variant="outline">{product.category.name}</Badge>
                     )}
                   </div>
                 </div>

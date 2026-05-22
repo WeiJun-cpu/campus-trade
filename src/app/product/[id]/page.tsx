@@ -1,53 +1,78 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { FavoriteButton } from "@/components/favorite-button";
+import { useProduct } from "@/hooks/use-product";
 import { formatPrice, formatDate, CONDITION_LABELS } from "@/lib/utils";
+import type { User } from "@supabase/supabase-js";
 
-export const dynamic = "force-dynamic";
-
-export default async function ProductPage({
+export default function ProductPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const supabase = await createClient();
-  const { id } = await params;
+  const { id } = use(params);
+  const { product, loading } = useProduct(id);
+  const [user, setUser] = useState<User | null>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const supabase = createClient();
 
-  const { data: product } = await supabase
-    .from("products")
-    .select("*, category:categories(*), seller:profiles!products_seller_id_fkey(*)")
-    .eq("id", id)
-    .single();
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      if (data.user) {
+        supabase
+          .from("favorites")
+          .select("id")
+          .eq("user_id", data.user.id)
+          .eq("product_id", id)
+          .maybeSingle()
+          .then(({ data: fav }) => setIsFavorited(!!fav));
+      }
+    });
+  }, [id]);
 
-  if (!product) notFound();
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-6">
+        <Skeleton className="mb-6 h-64 w-full rounded-lg" />
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="flex-1 space-y-4">
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+          <Skeleton className="h-48 w-full lg:w-72 rounded-lg" />
+        </div>
+      </div>
+    );
+  }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // 检查是否已收藏
-  let isFavorited = false;
-  if (user) {
-    const { data: fav } = await supabase
-      .from("favorites")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("product_id", id)
-      .maybeSingle();
-    isFavorited = !!fav;
+  if (!product) {
+    return (
+      <div className="flex flex-col items-center justify-center py-40">
+        <p className="text-muted-foreground">商品不存在</p>
+        <Button asChild className="mt-4">
+          <Link href="/">返回首页</Link>
+        </Button>
+      </div>
+    );
   }
 
   const images = (product as any).images || [];
   const seller = (product as any).seller;
+  const category = (product as any).category;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
-      {/* 图片区域 */}
       {images.length > 0 ? (
         <div className="mb-6 overflow-hidden rounded-lg bg-muted">
           <img
@@ -65,7 +90,6 @@ export default async function ProductPage({
       )}
 
       <div className="flex flex-col gap-6 lg:flex-row">
-        {/* 左侧商品信息 */}
         <div className="flex-1 space-y-4">
           <div>
             <h1 className="text-2xl font-bold">{product.title}</h1>
@@ -82,9 +106,7 @@ export default async function ProductPage({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {product.category && (
-              <Badge variant="secondary">{(product as any).category.name}</Badge>
-            )}
+            {category && <Badge variant="secondary">{category.name}</Badge>}
             <Badge variant="outline">{CONDITION_LABELS[product.condition]}</Badge>
             {product.status !== "active" && (
               <Badge variant="destructive">
@@ -107,11 +129,9 @@ export default async function ProductPage({
           </p>
         </div>
 
-        {/* 右侧卖家信息 */}
         <div className="w-full lg:w-72">
           <div className="rounded-lg border p-4 space-y-4">
             <h2 className="font-semibold">卖家信息</h2>
-
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
                 <AvatarFallback>

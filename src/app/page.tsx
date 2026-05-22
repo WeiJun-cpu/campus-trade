@@ -1,78 +1,73 @@
-import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ProductGrid } from "@/components/product-grid";
 import { SearchBar } from "@/components/search-bar";
 import { CategoryFilter } from "@/components/category-filter";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Product } from "@/lib/types";
+import { useProducts, useCategories } from "@/hooks/use-products";
 
-export const dynamic = "force-dynamic";
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") || "";
+  const category = searchParams.get("category") || "";
+  const sort = searchParams.get("sort") || "latest";
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string; category?: string; sort?: string }>;
-}) {
-  const supabase = await createClient();
-  const params = await searchParams;
-  const { q, category, sort } = params;
-
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("*")
-    .order("id");
-
-  let query = supabase
-    .from("products")
-    .select("id, title, price, images, condition, status, created_at")
-    .eq("status", "active");
-
-  if (q) {
-    query = query.ilike("title", `%${q}%`);
-  }
-
-  if (category) {
-    const { data: catData } = await supabase
-      .from("categories")
-      .select("id")
-      .eq("slug", category)
-      .single();
-    if (catData) {
-      query = query.eq("category_id", catData.id);
-    }
-  }
-
-  switch (sort) {
-    case "price_asc":
-      query = query.order("price", { ascending: true });
-      break;
-    case "price_desc":
-      query = query.order("price", { ascending: false });
-      break;
-    default:
-      query = query.order("created_at", { ascending: false });
-  }
-
-  const { data: products } = await query.limit(50);
+  const { categories } = useCategories();
+  const { products, loading } = useProducts({ q, category, sort });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">发现好物</h1>
-        <Suspense fallback={<Skeleton className="h-10 w-full max-w-md" />}>
-          <SearchBar />
-        </Suspense>
+        <SearchBar />
       </div>
 
-      {categories && (
+      {categories.length > 0 && (
         <div className="mb-6">
-          <Suspense fallback={<Skeleton className="h-9 w-64" />}>
-            <CategoryFilter categories={categories} selected={category || null} />
-          </Suspense>
+          <CategoryFilter categories={categories} selected={category || null} />
         </div>
       )}
 
-      <ProductGrid products={(products as Product[]) || []} />
+      {loading ? (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="aspect-square w-full rounded-lg" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-5 w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <ProductGrid products={products} />
+      )}
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-6xl px-4 py-6">
+          <div className="mb-6">
+            <Skeleton className="h-8 w-32" />
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="aspect-square w-full rounded-lg" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-5 w-1/2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }

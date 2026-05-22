@@ -1,33 +1,44 @@
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { use } from "react";
+import Link from "next/link";
+import { useProfile } from "@/hooks/use-product";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProductGrid } from "@/components/product-grid";
-import type { Product } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useProducts } from "@/hooks/use-products";
 
-export const dynamic = "force-dynamic";
-
-export default async function ProfilePage({
+export default function ProfilePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const supabase = await createClient();
-  const { id } = await params;
+  const { id } = use(params);
+  const { profile, loading } = useProfile(id);
+  const { products } = useProducts({});
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", id)
-    .single();
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-6">
+        <div className="mb-8 flex flex-col items-center gap-4 text-center">
+          <Skeleton className="h-20 w-20 rounded-full" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+      </div>
+    );
+  }
 
-  if (!profile) notFound();
-
-  const { data: products } = await supabase
-    .from("products")
-    .select("id, title, price, images, condition, status, created_at")
-    .eq("seller_id", id)
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center py-40">
+        <p className="text-muted-foreground">用户不存在</p>
+        <Button asChild className="mt-4">
+          <Link href="/">返回首页</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
@@ -47,7 +58,10 @@ export default async function ProfilePage({
       </div>
 
       <h2 className="mb-4 text-lg font-bold">TA 在售的商品</h2>
-      <ProductGrid products={(products as Product[]) || []} emptyMessage="该用户暂无在售商品" />
+      <ProductGrid
+        products={products.filter((p) => p.seller_id === id)}
+        emptyMessage="该用户暂无在售商品"
+      />
     </div>
   );
 }
