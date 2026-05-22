@@ -7,48 +7,64 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
+import { useUserStore } from "@/stores/user-store";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const user = useUserStore((s) => s.user);
+  const init = useUserStore((s) => s.init);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [qq, setQq] = useState("");
   const [wechat, setWechat] = useState("");
   const [username, setUsername] = useState("");
 
   useEffect(() => {
-    const loadProfile = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    let cancelled = false;
+    const load = async () => {
+      let currentUser = user;
+      if (!currentUser) {
+        currentUser = (await init()) ?? null;
+      }
+      if (!currentUser || cancelled) {
+        setPageLoading(false);
+        return;
+      }
 
+      const supabase = createClient();
       const { data } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", currentUser.id)
         .single();
 
-      if (data) {
-        setProfile(data);
-        setQq(data.qq || "");
-        setWechat(data.wechat || "");
-        setUsername(data.username || "");
+      if (!cancelled) {
+        if (data) {
+          setProfile(data);
+          setQq(data.qq || "");
+          setWechat(data.wechat || "");
+          setUsername(data.username || "");
+        }
+        setPageLoading(false);
       }
     };
-    loadProfile();
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   const handleSave = async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
 
     const { error } = await supabase
       .from("profiles")
       .update({ qq: qq.trim(), wechat: wechat.trim(), username: username.trim() })
-      .eq("id", user!.id);
+      .eq("id", currentUser!.id);
 
     if (error) {
       toast.error(error.message);
@@ -60,6 +76,15 @@ export default function SettingsPage() {
     setLoading(false);
   };
 
+  if (pageLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <Skeleton className="h-8 w-28 rounded-xl" />
+        <div className="h-40 rounded-2xl bg-muted animate-pulse" />
+      </div>
+    );
+  }
+
   if (!profile) {
     return (
       <div className="space-y-6 animate-fade-in">
@@ -69,7 +94,7 @@ export default function SettingsPage() {
         >
           编辑资料
         </h1>
-        <div className="h-40 rounded-2xl bg-muted animate-pulse" />
+        <p className="text-muted-fg text-sm">无法加载用户资料，请刷新后重试</p>
       </div>
     );
   }

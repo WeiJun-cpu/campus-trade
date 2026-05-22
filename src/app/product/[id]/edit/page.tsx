@@ -17,6 +17,7 @@ import {
 import { ImageUpload } from "@/components/image-upload";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
+import { useUserStore } from "@/stores/user-store";
 import { CONDITION_LABELS } from "@/lib/utils";
 import type { Category, Product } from "@/lib/types";
 import { toast } from "sonner";
@@ -28,6 +29,7 @@ export default function EditProductPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const user = useUserStore((s) => s.user);
   const [product, setProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,7 +58,6 @@ export default function EditProductPage({
 
       if (prodData) {
         // Verify ownership
-        const { data: { user } } = await supabase.auth.getUser();
         if (!user || user.id !== prodData.seller_id) {
           toast.error("无权编辑此商品");
           router.push("/dashboard/products");

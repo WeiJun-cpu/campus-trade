@@ -4,34 +4,42 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ProductGrid } from "@/components/product-grid";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { User } from "@supabase/supabase-js";
+import { useUserStore } from "@/stores/user-store";
 
 export default function MyFavoritesPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const user = useUserStore((s) => s.user);
+  const init = useUserStore((s) => s.init);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      if (data.user) {
-        supabase
-          .from("favorites")
-          .select(
-            "product_id, product:products!favorites_product_id_fkey(id, title, price, images, condition, status, created_at)"
-          )
-          .eq("user_id", data.user.id)
-          .order("created_at", { ascending: false })
-          .then(({ data: favs }) => {
-            const items = (favs || [])
-              .filter((f: any) => f.product)
-              .map((f: any) => f.product);
-            setProducts(items);
-            setLoading(false);
-          });
+    let cancelled = false;
+    const fetch = async () => {
+      let currentUser = user;
+      if (!currentUser) {
+        currentUser = (await init()) ?? null;
       }
-    });
+      if (!currentUser || cancelled) return;
+
+      const supabase = createClient();
+      const { data: favs } = await supabase
+        .from("favorites")
+        .select(
+          "product_id, product:products!favorites_product_id_fkey(id, title, price, images, condition, status, created_at)"
+        )
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+      if (!cancelled) {
+        const items = (favs || [])
+          .filter((f: any) => f.product)
+          .map((f: any) => f.product);
+        setProducts(items);
+        setLoading(false);
+      }
+    };
+    fetch();
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { useUserStore } from "@/stores/user-store";
 import { toast } from "sonner";
 
 interface Props {
@@ -12,21 +13,20 @@ interface Props {
 }
 
 export function FavoriteButton({ productId, initialFavorited }: Props) {
+  const user = useUserStore((s) => s.user);
   const [favorited, setFavorited] = useState(initialFavorited);
   const [animating, setAnimating] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const toggleFavorite = async () => {
-    setLoading(true);
-    const supabase = createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push("/auth/login");
-      setLoading(false);
       return;
     }
+
+    setLoading(true);
+    const supabase = createClient();
 
     if (favorited) {
       await supabase
@@ -46,7 +46,7 @@ export function FavoriteButton({ productId, initialFavorited }: Props) {
         setFavorited(true);
         setAnimating(true);
         setTimeout(() => setAnimating(false), 400);
-        toast.success("已收藏 ❤");
+        toast.success("已收藏");
       }
     }
 

@@ -12,22 +12,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { createClient } from "@/lib/supabase/client";
 import { LogoutButton } from "./logout-button";
-import type { User } from "@supabase/supabase-js";
+import { useUserStore } from "@/stores/user-store";
 
 export function Header() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, init } = useUserStore();
   const [scrolled, setScrolled] = useState(false);
-  const supabase = createClient();
   const pathname = usePathname();
 
+  // Initialize user once when header mounts (always present in layout)
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-    const { data: listener } = supabase.auth.onAuthStateChange((_e, s) =>
-      setUser(s?.user || null)
-    );
-    return () => listener.subscription.unsubscribe();
+    init();
   }, [pathname]);
 
   useEffect(() => {

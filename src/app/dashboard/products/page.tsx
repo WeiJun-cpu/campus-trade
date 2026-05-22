@@ -9,29 +9,37 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ManageProductButtons } from "@/components/manage-product-buttons";
 import { formatPrice, formatDate, STATUS_LABELS } from "@/lib/utils";
-import type { User } from "@supabase/supabase-js";
+import { useUserStore } from "@/stores/user-store";
 
 export default function MyProductsPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const user = useUserStore((s) => s.user);
+  const init = useUserStore((s) => s.init);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      if (data.user) {
-        supabase
-          .from("products")
-          .select("*, category:categories(*)")
-          .eq("seller_id", data.user.id)
-          .order("created_at", { ascending: false })
-          .then(({ data }) => {
-            setProducts(data || []);
-            setLoading(false);
-          });
+    let cancelled = false;
+    const fetch = async () => {
+      let currentUser = user;
+      if (!currentUser) {
+        currentUser = (await init()) ?? null;
       }
-    });
+      if (!currentUser || cancelled) return;
+
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("products")
+        .select("*, category:categories(*)")
+        .eq("seller_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+      if (!cancelled) {
+        setProducts(data || []);
+        setLoading(false);
+      }
+    };
+    fetch();
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) {

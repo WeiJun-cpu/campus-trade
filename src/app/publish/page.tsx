@@ -15,12 +15,14 @@ import {
 } from "@/components/ui/select";
 import { ImageUpload } from "@/components/image-upload";
 import { createClient } from "@/lib/supabase/client";
+import { useUserStore } from "@/stores/user-store";
 import { CONDITION_LABELS } from "@/lib/utils";
 import type { Category } from "@/lib/types";
 import { toast } from "sonner";
 
 export default function PublishPage() {
   const router = useRouter();
+  const user = useUserStore((s) => s.user);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -53,14 +55,13 @@ export default function PublishPage() {
       return;
     }
 
-    setLoading(true);
-    const supabase = createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push("/auth/login");
       return;
     }
+
+    setLoading(true);
+    const supabase = createClient();
 
     const { error } = await supabase.from("products").insert({
       title: title.trim(),

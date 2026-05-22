@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FavoriteButton } from "@/components/favorite-button";
 import { useProduct } from "@/hooks/use-product";
 import { formatPrice, formatDate, CONDITION_LABELS } from "@/lib/utils";
-import type { User } from "@supabase/supabase-js";
+import { useUserStore } from "@/stores/user-store";
 
 export default function ProductPage({
   params,
@@ -21,24 +21,31 @@ export default function ProductPage({
 }) {
   const { id } = use(params);
   const { product, loading } = useProduct(id);
-  const [user, setUser] = useState<User | null>(null);
+  const user = useUserStore((s) => s.user);
+  const init = useUserStore((s) => s.init);
   const [isFavorited, setIsFavorited] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      if (data.user) {
-        supabase
+    let cancelled = false;
+    const check = async () => {
+      let currentUser = user;
+      if (!currentUser) {
+        currentUser = (await init()) ?? null;
+      }
+      if (currentUser && !cancelled) {
+        const supabase = createClient();
+        const { data: fav } = await supabase
           .from("favorites")
           .select("id")
-          .eq("user_id", data.user.id)
+          .eq("user_id", currentUser.id)
           .eq("product_id", id)
-          .maybeSingle()
-          .then(({ data: fav }) => setIsFavorited(!!fav));
+          .maybeSingle();
+        if (!cancelled) setIsFavorited(!!fav);
       }
-    });
+    };
+    check();
+    return () => { cancelled = true; };
   }, [id]);
 
   if (loading) {
