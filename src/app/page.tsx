@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { ProductGrid } from "@/components/product-grid";
 import { SearchBar } from "@/components/search-bar";
 import { CategoryFilter } from "@/components/category-filter";
+import { Pagination } from "@/components/pagination";
+import { SortSelect } from "@/components/sort-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProducts, useCategories } from "@/hooks/use-products";
 
@@ -13,9 +15,10 @@ function HomeContent() {
   const q = searchParams.get("q") || "";
   const category = searchParams.get("category") || "";
   const sort = searchParams.get("sort") || "latest";
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
 
   const { categories } = useCategories();
-  const { products, loading } = useProducts({ q, category, sort });
+  const { products, loading, totalPages } = useProducts({ q, category, sort, page });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -37,10 +40,20 @@ function HomeContent() {
 
       {/* Categories */}
       {categories.length > 0 && (
-        <div className="mb-8 flex justify-center">
+        <div className="mb-6 flex justify-center">
           <CategoryFilter categories={categories} selected={category || null} />
         </div>
       )}
+
+      {/* Sort + count */}
+      <div className="flex items-center justify-between mb-4">
+        <SortSelect />
+        {!loading && (
+          <span className="text-xs text-muted-fg">
+            {products.length} 件商品
+          </span>
+        )}
+      </div>
 
       {/* Products */}
       {loading ? (
@@ -56,6 +69,9 @@ function HomeContent() {
       ) : (
         <ProductGrid products={products} />
       )}
+
+      {/* Pagination */}
+      <Pagination page={page} totalPages={totalPages} basePath="/" />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -47,6 +48,14 @@ export function ManageProductButtons({ productId, status }: Props) {
 
   return (
     <div className="flex gap-2 shrink-0">
+      <Button
+        size="sm"
+        variant="outline"
+        asChild
+        className="rounded-lg border-border/60 text-muted-fg hover:text-espresso hover:border-primary/30"
+      >
+        <Link href={`/product/${productId}/edit`}>编辑</Link>
+      </Button>
       {status === "active" && (
         <>
           <Button

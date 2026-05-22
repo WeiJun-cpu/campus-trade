@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -84,14 +85,16 @@ export default function ProductPage({
         {/* Image section */}
         <div className="lg:w-[55%] animate-fade-in-up">
           {images.length > 0 ? (
-            <div className="relative overflow-hidden rounded-2xl bg-muted shadow-md">
+            <div className="relative overflow-hidden rounded-2xl bg-muted shadow-md aspect-[4/3]">
               {!imageLoaded && (
-                <div className="absolute inset-0 bg-secondary animate-pulse rounded-2xl" />
+                <div className="absolute inset-0 bg-secondary animate-pulse rounded-2xl z-10" />
               )}
-              <img
+              <Image
                 src={images[0]}
                 alt={product.title}
-                className={`w-full max-h-96 object-contain transition-all duration-700 ${
+                fill
+                sizes="(max-width: 1024px) 100vw, 55vw"
+                className={`object-contain transition-all duration-700 ${
                   imageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
                 }`}
                 onLoad={() => setImageLoaded(true)}
@@ -127,9 +130,9 @@ export default function ProductPage({
               {images.map((img: string, i: number) => (
                 <div
                   key={i}
-                  className="shrink-0 h-16 w-16 rounded-xl border border-border/60 overflow-hidden bg-muted cursor-pointer hover:border-primary/40 transition-colors"
+                  className="shrink-0 h-16 w-16 rounded-xl border border-border/60 overflow-hidden bg-muted cursor-pointer hover:border-primary/40 transition-colors relative"
                 >
-                  <img src={img} alt="" className="h-full w-full object-cover" />
+                  <Image src={img} alt="" fill sizes="64px" className="object-cover" />
                 </div>
               ))}
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -109,11 +110,15 @@ export default function MyProductsPage() {
           >
             <Link href={`/product/${product.id}`} className="shrink-0">
               {product.images?.[0] ? (
-                <img
-                  src={product.images[0]}
-                  alt={product.title}
-                  className="h-20 w-20 rounded-xl object-cover"
-                />
+                <div className="h-20 w-20 rounded-xl overflow-hidden relative">
+                  <Image
+                    src={product.images[0]}
+                    alt={product.title}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
+                </div>
               ) : (
                 <div className="h-20 w-20 rounded-xl bg-muted flex items-center justify-center">
                   <svg className="h-8 w-8 text-muted-fg/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">

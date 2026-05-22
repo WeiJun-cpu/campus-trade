@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -61,11 +62,13 @@ export function ImageUpload({ images, onChange, max = 6 }: Props) {
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
         {images.map((url, i) => (
-          <div key={i} className="relative group">
-            <img
+          <div key={i} className="relative group h-24 w-24 rounded-xl overflow-hidden border border-border/60 shadow-sm">
+            <Image
               src={url}
               alt={`upload-${i}`}
-              className="h-24 w-24 rounded-xl object-cover border border-border/60 shadow-sm"
+              fill
+              sizes="96px"
+              className="object-cover"
             />
             <button
               type="button"

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { formatPrice, formatDate, CONDITION_LABELS } from "@/lib/utils";
 import type { Product } from "@/lib/types";
@@ -28,12 +29,14 @@ export function ProductCard({ product, index = 0 }: Props) {
           {firstImage ? (
             <>
               {!loaded && (
-                <div className="absolute inset-0 bg-secondary animate-pulse" />
+                <div className="absolute inset-0 bg-secondary animate-pulse z-10" />
               )}
-              <img
+              <Image
                 src={firstImage}
                 alt={product.title}
-                className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-105 ${
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                className={`object-cover transition-all duration-500 group-hover:scale-105 ${
                   loaded ? "opacity-100" : "opacity-0"
                 }`}
                 onLoad={() => setLoaded(true)}

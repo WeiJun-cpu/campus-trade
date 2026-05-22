@@ -16,7 +16,7 @@ export default function ProfilePage({
 }) {
   const { id } = use(params);
   const { profile, loading } = useProfile(id);
-  const { products } = useProducts({});
+  const { products } = useProducts({ sellerId: id, pageSize: 50 });
 
   if (loading) {
     return (
@@ -46,7 +46,6 @@ export default function ProfilePage({
     );
   }
 
-  const userProducts = products.filter((p: any) => p.seller_id === id);
   const initials = profile.username?.slice(0, 2).toUpperCase() || "U";
 
   return (
@@ -106,11 +105,11 @@ export default function ProfilePage({
         >
           TA 在售的商品
         </h2>
-        <span className="text-sm text-muted-fg">{userProducts.length} 件</span>
+        <span className="text-sm text-muted-fg">{products.length} 件</span>
       </div>
 
       <ProductGrid
-        products={userProducts}
+        products={products}
         emptyMessage="该用户暂无在售商品"
       />
     </div>

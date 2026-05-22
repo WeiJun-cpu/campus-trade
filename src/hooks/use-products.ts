@@ -27,18 +27,31 @@ export function useProducts(params: {
   q?: string;
   category?: string;
   sort?: string;
+  page?: number;
+  pageSize?: number;
+  sellerId?: string;
 }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
   const supabase = createClient();
+
+  const page = params.page || 1;
+  const pageSize = params.pageSize || 20;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   const fetch = useCallback(async () => {
     setLoading(true);
 
     let query = supabase
       .from("products")
-      .select("id, title, price, images, condition, status, created_at")
+      .select("id, title, price, images, condition, status, created_at", { count: "exact" })
       .eq("status", "active");
+
+    if (params.sellerId) {
+      query = query.eq("seller_id", params.sellerId);
+    }
 
     if (params.q) {
       query = query.ilike("title", `%${params.q}%`);
@@ -66,14 +79,19 @@ export function useProducts(params: {
         query = query.order("created_at", { ascending: false });
     }
 
-    const { data } = await query.limit(50);
+    query = query.range(from, to);
+
+    const { data, count } = await query;
     setProducts((data as Product[]) || []);
+    setTotal(count || 0);
     setLoading(false);
-  }, [params.q, params.category, params.sort]);
+  }, [params.q, params.category, params.sort, params.sellerId, from, to]);
 
   useEffect(() => {
     fetch();
   }, [fetch]);
 
-  return { products, loading, refetch: fetch };
+  const totalPages = Math.ceil(total / pageSize);
+
+  return { products, loading, refetch: fetch, total, page, totalPages };
 }

@@ -1,19 +1,25 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Input } from "@/components/ui/input";
 
 export function SearchBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [value, setValue] = useState(searchParams.get("q") || "");
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
+  // Sync from URL changes (e.g., category click clears search)
+  useEffect(() => {
+    const q = searchParams.get("q") || "";
+    setValue(q);
+  }, [searchParams]);
+
   const handleSearch = useCallback(
-    (value: string) => {
+    (term: string) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set("q", value);
+      if (term) {
+        params.set("q", term);
       } else {
         params.delete("q");
       }
@@ -41,15 +47,31 @@ export function SearchBar() {
       <input
         type="text"
         placeholder="搜索你想要的..."
-        defaultValue={searchParams.get("q") || ""}
+        value={value}
         onChange={(e) => {
+          const next = e.target.value;
+          setValue(next);
           if (timerRef.current) clearTimeout(timerRef.current);
           timerRef.current = setTimeout(() => {
-            handleSearch(e.target.value);
-          }, 500);
+            handleSearch(next);
+          }, 400);
         }}
         className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface border border-border text-sm outline-none transition-all duration-200 placeholder:text-muted-fg/50 focus:border-primary/40 focus:ring-2 focus:ring-primary/10 hover:border-border/80"
       />
+      {value && (
+        <button
+          onClick={() => {
+            setValue("");
+            if (timerRef.current) clearTimeout(timerRef.current);
+            handleSearch("");
+          }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-muted flex items-center justify-center text-muted-fg hover:text-espresso hover:bg-border/50 transition-colors"
+        >
+          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
